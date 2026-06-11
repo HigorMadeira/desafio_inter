@@ -172,52 +172,12 @@ Ele permite criar, listar, remover e alterar status de tarefas. A alteração de
 
 Isso evita chamadas desnecessárias para a API e deixa a interação mais controlada.
 
-## Como rodar
-
-### 1. Subir o PostgreSQL
+## Como rodar com Docker
 
 Na raiz do projeto:
 
 ```bash
-docker compose up -d
-```
-
-O banco será iniciado com:
-
-```text
-Database: desafio_inter
-User: desafio_user
-Password: desafio_pass
-Port: 5432
-```
-
-### 2. Rodar o backend
-
-```bash
-cd backend
-./mvnw spring-boot:run
-```
-
-Backend disponível em:
-
-```text
-http://localhost:8080
-```
-
-Healthcheck:
-
-```bash
-curl http://localhost:8080/actuator/health
-```
-
-### 3. Rodar o frontend
-
-Em outro terminal:
-
-```bash
-cd frontend
-npm install
-npm run dev
+docker compose up --build
 ```
 
 Frontend disponível em:

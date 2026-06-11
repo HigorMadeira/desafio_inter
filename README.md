@@ -242,6 +242,18 @@ Body:
 ```http
 DELETE /api/tasks/{id}
 ```
+## Documentação da API
+
+A API possui documentação OpenAPI/Swagger gerada com Springdoc.
+
+Com o backend rodando:
+
+- Swagger UI: http://localhost:8080/swagger-ui.html
+- OpenAPI JSON: http://localhost:8080/v3/api-docs
+
+Com a aplicação rodando via Docker Compose, também é possível acessar:
+
+- Swagger UI via frontend/Nginx: http://localhost:5173/swagger-ui.html
 
 ## Testes
 

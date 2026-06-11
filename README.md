@@ -357,19 +357,28 @@ task_event source=kafka payload={"eventType":"TASK_UPDATED","taskId":"...","titl
 
 Esse fluxo demonstra publicação, consumo e processamento desacoplado de eventos.
 
-## Build
+## Build local
 
-Backend:
+### Backend
+
+Antes de gerar o build do backend, mantenha o PostgreSQL disponível:
+
+```bash
+docker compose up -d postgres
+```
+
+Depois execute:
 
 ```bash
 cd backend
 ./mvnw clean package
 ```
 
-Frontend:
+### Frontend
 
 ```bash
 cd frontend
+npm install
 npm run build
 ```
 

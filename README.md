@@ -11,12 +11,8 @@ A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, 
 * Java 17
 * Spring Boot
 * Maven
-* Spring Web
-* Spring Data JPA
 * PostgreSQL
 * Flyway
-* Bean Validation
-* Spring Actuator
 * JUnit / MockMvc
 
 ### Frontend
@@ -25,12 +21,12 @@ A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, 
 * TypeScript
 * Vite
 * CSS puro
-* Fetch API
 
 ### Infraestrutura local
 
 * Docker
 * PostgreSQL
+* Kafka
 
 ## Funcionalidades
 

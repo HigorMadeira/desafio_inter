@@ -162,7 +162,11 @@ A publicação é feita por uma porta da aplicação:
 TaskEventPublisher
 ```
 
-A implementação atual usa eventos internos do Spring e um handler de log. A ideia foi demonstrar desacoplamento: futuramente, a implementação poderia ser trocada por Kafka ou Redpanda sem alterar o caso de uso.
+A implementação atual publica mensagens em um tópico Kafka chamado `task-events`.
+
+A aplicação continua desacoplada da tecnologia de mensageria porque a camada `application` conhece apenas a interface `TaskEventPublisher`. A implementação concreta com Kafka fica na camada `infrastructure`.
+
+Também existe um consumer simples, `LogTaskEventHandler`, que consome as mensagens do Kafka e registra o payload em log. Em um cenário real, esse consumer poderia ser evoluído para auditoria, métricas, notificações ou integração com outros serviços.
 
 ### Frontend
 

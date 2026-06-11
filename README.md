@@ -2,7 +2,7 @@
 
 Aplicação de gerenciamento de tarefas desenvolvida para o desafio técnico Java SR.
 
-A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, banco PostgreSQL com migrations via Flyway, arquitetura em camadas e um fluxo simples orientado a eventos.
+A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, banco PostgreSQL com migrations via Flyway, arquitetura em camadas e uma arquitetura orientada a eventos com Kafka para comunicação assíncrona entre componentes.
 
 ## Stack
 

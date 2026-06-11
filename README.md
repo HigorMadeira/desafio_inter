@@ -2,7 +2,7 @@
 
 Aplicação de gerenciamento de tarefas desenvolvida para o desafio técnico Java SR.
 
-A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, banco PostgreSQL com migrations via Flyway, arquitetura em camadas e uma arquitetura orientada a eventos com Kafka para comunicação assíncrona entre componentes.
+A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, banco PostgreSQL com migrations via Flyway, arquitetura em camadas e processamento assíncrono de eventos com Kafka.
 
 ## Stack
 
@@ -13,6 +13,8 @@ A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, 
 * Maven
 * PostgreSQL
 * Flyway
+* Spring Kafka
+* Springdoc OpenAPI/Swagger
 * JUnit / MockMvc
 
 ### Frontend
@@ -20,13 +22,15 @@ A solução possui backend em Java/Spring Boot, frontend em React + TypeScript, 
 * React
 * TypeScript
 * Vite
-* CSS puro
+* CSS
 
 ### Infraestrutura local
 
 * Docker
+* Docker Compose
 * PostgreSQL
 * Kafka
+* Nginx para servir o frontend no Docker
 
 ## Funcionalidades
 
@@ -83,7 +87,7 @@ Contém:
 * `UpdateTaskCommand`
 * `TaskEventPublisher`
 
-Essa camada orquestra os fluxos de criação, listagem, atualização e remoção de tarefas.
+Essa camada orquestra os fluxos de criação, listagem, atualização, remoção de tarefas e publicação de eventos.
 
 ### `domain`
 
@@ -104,7 +108,7 @@ A entidade `Task` não possui anotações de Spring ou JPA. A intenção foi man
 
 Camada com detalhes técnicos.
 
-Contém a implementação de persistência com JPA/PostgreSQL e o processamento simples de eventos.
+Contém a implementação de persistência com JPA/PostgreSQL e o fluxo de eventos com Kafka.
 
 Exemplos:
 
@@ -119,7 +123,7 @@ Exemplos:
 
 ### Spring Boot
 
-O desafio mencionava Micronaut como desejável, mas também aceitava Spring Boot. Optei por Spring Boot por ser uma stack madura, produtiva e adequada para demonstrar arquitetura, persistência, migrations, testes, healthcheck e integração com frontend dentro do prazo.
+O desafio mencionava Micronaut como desejável, mas também aceitava Spring Boot. Optei por Spring Boot por ser uma stack madura, produtiva e adequada para demonstrar arquitetura, persistência, migrations, testes, healthcheck, documentação e integração com frontend dentro do prazo.
 
 ### Domínio separado da persistência
 
@@ -145,7 +149,7 @@ spring.jpa.hibernate.ddl-auto=validate
 
 Assim, o Hibernate apenas valida o schema. Quem cria e evolui as tabelas é o Flyway.
 
-### Event-driven
+### Event-driven com Kafka
 
 Ao criar ou atualizar uma tarefa, a aplicação publica eventos:
 
@@ -180,11 +184,25 @@ Na raiz do projeto:
 docker compose up --build
 ```
 
-Frontend disponível em:
+Esse comando sobe:
+
+* PostgreSQL
+* Kafka
+* Backend Spring Boot
+* Frontend React servido via Nginx
+
+Serviços disponíveis:
 
 ```text
-http://localhost:5173
+Frontend: http://localhost:5173
+Backend: http://localhost:8080
+Swagger UI: http://localhost:8080/swagger-ui.html
+Healthcheck: http://localhost:8080/actuator/health
+PostgreSQL: localhost:5432
+Kafka: localhost:29092
 ```
+
+O backend aplica as migrations do Flyway automaticamente ao iniciar.
 
 ## Endpoints principais
 
@@ -242,18 +260,53 @@ Body:
 ```http
 DELETE /api/tasks/{id}
 ```
+
 ## Documentação da API
 
 A API possui documentação OpenAPI/Swagger gerada com Springdoc.
 
 Com o backend rodando:
 
-- Swagger UI: http://localhost:8080/swagger-ui.html
-- OpenAPI JSON: http://localhost:8080/v3/api-docs
+* Swagger UI: http://localhost:8080/swagger-ui.html
+* OpenAPI JSON: http://localhost:8080/v3/api-docs
 
 Com a aplicação rodando via Docker Compose, também é possível acessar:
 
-- Swagger UI via frontend/Nginx: http://localhost:5173/swagger-ui.html
+* Swagger UI via frontend/Nginx: http://localhost:5173/swagger-ui.html
+
+## Kafka
+
+A aplicação usa Kafka para publicar eventos de criação e atualização de tarefas.
+
+Tópico utilizado:
+
+```text
+task-events
+```
+
+Eventos publicados:
+
+* `TASK_CREATED`
+* `TASK_UPDATED`
+
+Para listar os tópicos:
+
+```bash
+docker exec -it desafio_inter_kafka /opt/kafka/bin/kafka-topics.sh \
+  --bootstrap-server localhost:9092 \
+  --list
+```
+
+Para consumir mensagens manualmente:
+
+```bash
+docker exec -it desafio_inter_kafka /opt/kafka/bin/kafka-console-consumer.sh \
+  --bootstrap-server localhost:9092 \
+  --topic task-events \
+  --from-beginning
+```
+
+Com o consumer aberto, crie ou atualize uma tarefa pelo frontend ou pela API. Uma mensagem JSON deve aparecer no terminal.
 
 ## Testes
 
@@ -268,7 +321,15 @@ Ele cobre:
 * Erro 404
 * Validação 400
 
-Para rodar:
+Nos testes automatizados, o Kafka é desabilitado pelo profile `test` e substituído por um publisher no-op. Isso mantém os testes estáveis e independentes de um broker externo.
+
+Para rodar os testes, mantenha o PostgreSQL disponível via Docker:
+
+```bash
+docker compose up -d postgres
+```
+
+Depois execute:
 
 ```bash
 cd backend
@@ -283,14 +344,18 @@ Ou apenas o teste principal:
 
 ## Logs de eventos
 
-Ao criar ou atualizar uma tarefa, o backend registra logs parecidos com:
+Ao criar ou atualizar uma tarefa, o backend publica uma mensagem no Kafka no tópico `task-events`.
+
+A aplicação também possui um consumer simples que consome essas mensagens e registra o payload em log.
+
+Exemplo:
 
 ```text
-task_event type=TASK_CREATED taskId=... title="..." occurredAt=...
-task_event type=TASK_UPDATED taskId=... title="..." status=IN_PROGRESS occurredAt=...
+task_event source=kafka payload={"eventType":"TASK_CREATED","taskId":"...","title":"...","occurredAt":"..."}
+task_event source=kafka payload={"eventType":"TASK_UPDATED","taskId":"...","title":"...","status":"IN_PROGRESS","occurredAt":"..."}
 ```
 
-Esse fluxo demonstra a emissão e o processamento desacoplado de eventos.
+Esse fluxo demonstra publicação, consumo e processamento desacoplado de eventos.
 
 ## Build
 
@@ -315,5 +380,4 @@ Ferramentas de IA foram utilizadas como apoio durante o desenvolvimento, sob orq
 Foi usado github copilot como autocompleter, e claude cli para criação de estruturas repetitivas.
 
 O uso ocorreu principalmente para apoio da criação de estruturas repetitivas como DTOs, entidades e mapeamentos. Para o frontend usei claude como agente para deixar o react mais refinado/bonito mais rapido.
-
 

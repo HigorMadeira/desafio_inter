@@ -10,13 +10,15 @@ import com.higor.desafiointer.task.domain.Task;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/tasks")
+@Tag(name = "Tasks", description = "Endpoints para gerenciamento de tarefas")
 public class TaskController {
 
     private final TaskService taskService;
@@ -25,6 +27,7 @@ public class TaskController {
         this.taskService = taskService;
     }
 
+    @Operation(summary = "Cria uma nova tarefa")
     @PostMapping
     public ResponseEntity<TaskResponse> create(@Valid @RequestBody CreateTaskRequest request) {
         Task task = taskService.create(new CreateTaskCommand(
@@ -39,6 +42,7 @@ public class TaskController {
                 .body(TaskResponse.fromDomain(task));
     }
 
+    @Operation(summary = "Lista todas as tarefas")
     @GetMapping
     public ResponseEntity<List<TaskResponse>> findAll() {
         List<TaskResponse> response = taskService.findAll()
@@ -48,7 +52,7 @@ public class TaskController {
 
         return ResponseEntity.ok(response);
     }
-
+    @Operation(summary = "Busca tarefa por ID")
     @GetMapping("/{id}")
     public ResponseEntity<TaskResponse> findById(@PathVariable UUID id) {
         Task task = taskService.findById(id);
@@ -56,6 +60,7 @@ public class TaskController {
         return ResponseEntity.ok(TaskResponse.fromDomain(task));
     }
 
+    @Operation(summary = "Atualiza uma tarefa existente")
     @PutMapping("/{id}")
     public ResponseEntity<TaskResponse> update(
             @PathVariable UUID id,
@@ -70,7 +75,7 @@ public class TaskController {
 
         return ResponseEntity.ok(TaskResponse.fromDomain(task));
     }
-
+    @Operation(summary = "Remove uma tarefa")
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(@PathVariable UUID id) {
         taskService.delete(id);

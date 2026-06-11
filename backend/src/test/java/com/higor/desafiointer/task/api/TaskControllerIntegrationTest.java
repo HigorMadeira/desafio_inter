@@ -1,5 +1,4 @@
 package com.higor.desafiointer.task.api;
-
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
@@ -11,7 +10,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.web.context.WebApplicationContext;
-
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -20,11 +18,17 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.header;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import com.higor.desafiointer.task.application.port.TaskEventPublisher;
+import com.higor.desafiointer.task.domain.event.TaskCreatedEvent;
+import com.higor.desafiointer.task.domain.event.TaskUpdatedEvent;
+import org.springframework.boot.test.context.TestConfiguration;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Primary;
 
-
-@SpringBootTest
+@SpringBootTest(properties = {
+        "spring.kafka.listener.auto-startup=false"
+})
 class TaskControllerIntegrationTest {
-
     @Autowired
     private WebApplicationContext webApplicationContext;
 
@@ -111,5 +115,23 @@ class TaskControllerIntegrationTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.message").value("Validation failed"))
                 .andExpect(jsonPath("$.details[0]", containsString("Title is required")));
+    }
+
+    @TestConfiguration
+    static class TestConfig {
+
+        @Bean
+        @Primary
+        TaskEventPublisher taskEventPublisher() {
+            return new TaskEventPublisher() {
+                @Override
+                public void publish(TaskCreatedEvent event) {
+                }
+
+                @Override
+                public void publish(TaskUpdatedEvent event) {
+                }
+            };
+        }
     }
 }

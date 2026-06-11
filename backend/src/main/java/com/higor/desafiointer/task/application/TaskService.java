@@ -16,19 +16,6 @@ import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-/**
- * Camada de aplicação.
- *
- * Responsável por orquestrar os casos de uso:
- * - criar tarefa
- * - listar tarefas
- * - buscar tarefa por id
- * - atualizar tarefa
- * - remover tarefa
- *
- * Esta classe não conhece HTTP, Controller, DTO de API,
- * JPA ou PostgreSQL diretamente.
- */
 @Service
 public class TaskService {
 

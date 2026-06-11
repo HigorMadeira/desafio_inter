@@ -39,12 +39,6 @@ public class Task {
         );
     }
 
-    /**
-     * Factory method para reconstruir uma Task vinda do banco.
-     *
-     * Isso será usado depois pela camada de infraestrutura,
-     * quando convertermos TaskJpaEntity -> Task.
-     */
     public static Task restore(
             UUID id,
             String title,

@@ -8,16 +8,15 @@ import com.higor.desafiointer.task.domain.event.TaskUpdatedEvent;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Component;
-
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import java.util.Map;
 
-/**
- * Implementação Kafka da porta TaskEventPublisher.
- *
- * A camada Application continua dependendo apenas da interface.
- * O detalhe de publicar em Kafka fica isolado na Infrastructure.
- */
 @Component
+@ConditionalOnProperty(
+        name = "app.kafka.enabled",
+        havingValue = "true",
+        matchIfMissing = true
+)
 public class SpringTaskEventPublisher implements TaskEventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
